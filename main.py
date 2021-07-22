@@ -23,12 +23,14 @@ with open('rv_30_surf_all_fl_m09_new.f06') as file:
         if 'FLUTTER' and 'SUMMARY' in line:  # если встретили нужный блок
             Flut_flag = True
             counter_row = 1
+            pnt = []  # текущая точка
 
         while Flut_flag and (counter_row == count_point or counter_row > count_data):  # Пока мы в нужном блоке
             if 'NASTRAN' and 'AEROELASTIC' in line:  # Определение условия выхода из блока
                 Flut_flag = False
+                points.append(pnt)
+                # print(pnt)
                 counter_row = 0
-                print()
                 break
 
 #            num_str = ''
@@ -37,19 +39,25 @@ with open('rv_30_surf_all_fl_m09_new.f06') as file:
         #        s = ' ' if s == '  ' else True
             for i in range(10):  # Удаление лишних пробелов. Теперь отделение по одному пробелу
                 line = line.replace('  ', ' ')
-            line += ' '
+            line += ' '  # чтобы чтение последнего слова работало
+
             lst_str = []  # Список, в котором содержатся отдельные слова и числа из строки
-            temp_str = ''
+            temp_str = ''  # список в котором хранится текущее слово
             for i in range(len(line)):
                 if line[i] != ' ':
                     temp_str += line[i]
-                elif counter_row > count_data + 1:
+                elif counter_row > count_data + 1:  # преобразование для чисел
                     lst_str.append(float(temp_str))
                     temp_str = ''
                 else:
                     lst_str.append(temp_str)
                     temp_str = ''
+            l = lst_str
+            if counter_row == count_point:  # для первой строки в блоке
+                lst_str = [l[0] + l[1] + l[2] + ', ' + l[3] + '_' + l[4] + l[5] + l[6]]
             print(lst_str)
+            pnt.append(lst_str)
+
 
             # for i in range(len(line)):  # По сути вывод всех элементов из строки
             #     print(line[i], end='')
@@ -57,6 +65,8 @@ with open('rv_30_surf_all_fl_m09_new.f06') as file:
             break
         counter_row += 1
 
+print()
+print(points)
 
 
 
