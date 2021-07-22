@@ -80,3 +80,6 @@ for i in range(len(points_temp)):
     plt.plot(points[i]['VELOCITY'], points[i]['DAMPING'])
 plt.grid()
 plt.show()
+
+
+# Надо добавить оформление получше, выбор файла и выбор точек. Всё остальное запрятать
