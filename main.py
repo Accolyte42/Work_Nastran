@@ -15,16 +15,25 @@ count_data = 5  # номер строки, с которой идут данны
 counter = 0
 with open('rv_30_surf_all_fl_m09_new.f06') as file:
     for line in file:
-        line = line.strip()
-        if 'FLUTTER' and 'SUMMARY' in line:
-            Flut_flag = True
-        while Flut_flag:
-            if 'NASTRAN' and 'AEROELASTIC' in line:
-                Flut_flag = False
-                break
-            print(line.strip())
-            break
+        line = line.strip()  # убирание лишних пробелов
 
+        if 'FLUTTER' and 'SUMMARY' in line:  # если встретили нужный блок
+            Flut_flag = True
+            counter = 1
+
+        while Flut_flag and (counter == 3 or counter > 5):  # Пока мы в нужном блоке
+            if 'NASTRAN' and 'AEROELASTIC' in line:  # Определение условия выхода из блока
+                Flut_flag = False
+                counter = 0
+                break
+
+#            num_str = ''
+
+            for i in line:  # По сути вывод всех элементов из строки
+                print(i, end='')
+            print()
+            break
+        counter += 1
 
 
 
