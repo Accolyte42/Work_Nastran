@@ -8,18 +8,17 @@
 #
 import pandas as pd
 import matplotlib.pyplot as plt
+
+
 # %matplotlib qt
 
-
-def get_points(filename, clear_columns=True):
-    # Функция, принимающая (полное) имя файла, и выдающая словарь со всеми
-    Flut_flag = False  # Флаг, отвечающий за начало расчета на флаттер в f06 файле
+def read_points_from_file(filename):
+    # Функция чтения всех тонов для всех сабкейсов без разделения
+    flut_flag = False  # Флаг, отвечающий за начало расчета на флаттер в f06 файле
     count_point = 3  # номер строки, с которой идет описание случая
     count_data = 5  # номер строки, с которой идут данные (с шапкой)
     counter_row = 0  # счетчик строк для определения информативных
     points_temp = []  # Расчетные точки. Каждая расчетная точка - двумерный массив
-    points_name_subcase = []
-    pnt_lst='all'
 
     # После чтения всего файла получаем points_temp - это все расчетные точки подряд для всех махов (subcase-ов)
     with open(filename) as file:
@@ -27,14 +26,14 @@ def get_points(filename, clear_columns=True):
             line = line.strip()  # убирание лишних пробелов с начала и конца
 
             if 'FLUTTER' and 'SUMMARY' in line:  # если встретили нужный блок с началом флаттера
-                Flut_flag = True  # Если начался флаттерная часть
+                flut_flag = True  # Если начался флаттерная часть
                 counter_row = 1  # теперь мы можем считать строки в информативном блоке
                 pnt = []  # текущая точка
 
             # Пока мы в нужном блоке
-            while Flut_flag and (counter_row == count_point or counter_row > count_data):  # Пока мы в нужном блоке
+            while flut_flag and (counter_row == count_point or counter_row > count_data):  # Пока мы в нужном блоке
                 if 'NASTRAN' and 'AEROELASTIC' in line:  # Определение условия выхода из блока
-                    Flut_flag = False
+                    flut_flag = False
                     points_temp.append(pnt)  #
                     counter_row = 0
                     break
@@ -64,8 +63,17 @@ def get_points(filename, clear_columns=True):
                 break
             counter_row += 1
 
+    return points_temp
+
+
+def get_points(filename, clear_columns=True):
+    # Функция, принимающая (полное) имя файла, и выдающая словарь со всеми
+
+    # После чтения всего файла получаем points_temp - это все расчетные точки подряд для всех махов (subcase-ов)
+    points_temp = read_points_from_file(filename)
+
     # Далее надо разделить points_temp по сабкейсам (разным махам)
-    points = []  # 'nj e;t
+    points = []  # Это уже точки в каждом сабкейсе
     cur_mach = points_temp[0][0][0][points_temp[0][0][0].index('MACH_NUMBER'):]
     dict_points = {}
 
@@ -74,7 +82,7 @@ def get_points(filename, clear_columns=True):
         if points_temp[i][0][0][points_temp[i][0][0].index('MACH_NUMBER'):] == cur_mach:  # Если сабкейсы не изменился
             points.append(pd.DataFrame(points_temp[i][2:], columns=points_temp[i][1], dtype=float))
             cur_mach = points_temp[i][0][0][points_temp[i][0][0].index('MACH_NUMBER'):]
-        else: # Если сабкейсы изменился, значит надо сохранить всё, что накопилось в прошлом сабкейсе
+        else:  # Если сабкейсы изменился, значит надо сохранить всё, что накопилось в прошлом сабкейсе
             dict_points[float(cur_mach[12:])] = points
             cur_mach = points_temp[i][0][0][points_temp[i][0][0].index('MACH_NUMBER'):]
             points = []
@@ -94,13 +102,39 @@ dct = get_points('rv_30_surf_all_fl_m085_089.f06')
 
 print(dct.keys())
 points = dct[0.89]
-print(points[0].columns)
-print(points[0])
+# print(points[0].columns)
+# print(points[0])
 
+# print(dct[0.85][0]); print()
+# print(dct[0.85][0].iloc[2]['DAMPING'])
+# print(len(dct[0.85][0]))
 
-# for i in dct:  # Проход по всем Махам
-# for j in dct[i]:  # Проход по всем тонам
-# print(j)
+# my_series2 = pd.Series([5, 6, 7, 8, 9, 10], index=['a', 'b', 'c', 'd', 'e', 'f'])
+# print(my_series2)
+
+dct_tones = {'test': pd.DataFrame({
+    'test_mach': [1.1, 2.2]
+    }, index=['e', 'f'])}
+for key in dct:
+    counter = 0
+    for pnts in dct[key]:
+        dct_tones[counter] = pd.DataFrame({key: [1.1, 2.2]}, index=['e', 'f'])
+        counter += 1
+    counter = 0
+
+for key in dct:
+    counter = 0
+    for pnts in dct[key]:
+        e = pnts.iloc[len(pnts)//2]['DAMPING']
+        f = pnts.iloc[len(pnts)//2]['FREQUENCY']
+        dct_tones[counter][key] = [e, f]
+        counter += 1
+    counter = 0
+
+dct_tones.pop('test')
+for key in dct_tones:
+    print(key)
+    print(dct_tones[key])
 
 fig = plt.figure()
 for i in range(len(points)):
@@ -113,6 +147,3 @@ for i in range(len(points)):
     plt.plot(points[i]['VELOCITY'], points[i]['DAMPING'])
 plt.grid()
 plt.show()
-
-
-
