@@ -108,7 +108,7 @@ print(points[0])
 # for i in dct:  # Проход по всем Махам
 # for j in dct[i]:  # Проход по всем тонам
 # print(j)
-
+# Comment
 
 fig = plt.figure()
 for i in range(len(points)):
