@@ -90,6 +90,10 @@ def get_points(filename, pnt_lst='all'):
             points.append(pd.DataFrame(points_temp[i][2:], columns=points_temp[i][1], dtype=float))
             points_name_subcase.append(points_temp[i][0])
 
+    for key in dict_points:
+        for df in dict_points[key]:
+            df.drop(['KFREQ', '1./KFREQ', 'COMPLEX', 'EIGENVALUE'], axis=1, inplace=True)
+
     return dict_points
 
 
@@ -108,7 +112,6 @@ print(points[0])
 # for i in dct:  # Проход по всем Махам
 # for j in dct[i]:  # Проход по всем тонам
 # print(j)
-# Comment
 
 fig = plt.figure()
 for i in range(len(points)):
