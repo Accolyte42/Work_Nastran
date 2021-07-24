@@ -8,9 +8,15 @@
 #
 import pandas as pd
 import matplotlib.pyplot as plt
+# import Modules
 
 
-# %matplotlib qt
+def merge_two_dicts(lst):
+    z = lst[0].copy()
+    for i in range(1, len(lst)):
+        z.update(lst[i])
+    return z
+
 
 def read_points_from_file(filename):
     # Функция чтения всех тонов для всех сабкейсов без разделения
@@ -79,13 +85,18 @@ def get_points(filename, clear_columns=True):
 
     # Далее неразделенные записи points_temp деляться на записи по сабкейсам в словарь
     for i in range(len(points_temp)):  # прохождение неразделенных на сабкейсы записей.
-        if points_temp[i][0][0][points_temp[i][0][0].index('MACH_NUMBER'):] == cur_mach:  # Если сабкейсы не изменился
+        if points_temp[i][0][0][
+           points_temp[i][0][0].index('MACH_NUMBER'):] == cur_mach or flag_change:  # Если сабкейсы не изменился
             points.append(pd.DataFrame(points_temp[i][2:], columns=points_temp[i][1], dtype=float))
             cur_mach = points_temp[i][0][0][points_temp[i][0][0].index('MACH_NUMBER'):]
+            flag_change = False
         else:  # Если сабкейсы изменился, значит надо сохранить всё, что накопилось в прошлом сабкейсе
+            # points.append(pd.DataFrame(points_temp[i][2:], columns=points_temp[i][1], dtype=float))
             dict_points[float(cur_mach[12:])] = points
             cur_mach = points_temp[i][0][0][points_temp[i][0][0].index('MACH_NUMBER'):]
             points = []
+            points.append(pd.DataFrame(points_temp[i][2:], columns=points_temp[i][1], dtype=float))
+            flag_change = True
         if i == len(points_temp) - 1:  # Обработка самого последнего сабкейса. Т.к. для последнего нет изменения
             dict_points[float(points_temp[i][0][0][points_temp[i][0][0].index('MACH_NUMBER') + 12:])] = points
 
@@ -98,57 +109,123 @@ def get_points(filename, clear_columns=True):
     return dict_points
 
 
-dct = get_points('rv_30_surf_all_fl_m085_089.f06')
+def get_dct_tones(dct):
+    flag_t = True
+    dct_tones = {'test': pd.DataFrame({'test_mach': [1.1, 2.2]}, index=['e', 'f'])}
+    for key in dct:
+        counter = 0
+        for pnts in dct[key]:
+            if not flag_t:
+                break
+            dct_tones[counter] = pd.DataFrame({key: [1.1, 2.2]}, index=['e', 'f'])
+            counter += 1
+        counter = 0
+        flag_t = False
+    for key in dct:
+        counter = 0
+        for i in range(len(dct[key])):
+            e = dct[key][i].iloc[len(dct[key][i]) // 2]['DAMPING']
+            f = dct[key][i].iloc[len(dct[key][i]) // 2]['FREQUENCY']
+            dct_tones[counter][key] = [e, f]
+            counter += 1
+        counter = 0
+    dct_tones.pop('test')
+
+    return dct_tones
+
+
+def graphics(dct, mach, tones='all'):
+    # построение нужных графиков
+    points = dct[mach]
+    fig = plt.figure()
+    if tones == 'all':
+        for i in range(len(points)):
+            plt.plot(points[i]['DAMPING'], points[i]['FREQUENCY'])
+    else:
+        for i in tones:
+            plt.plot(points[i]['DAMPING'], points[i]['FREQUENCY'])
+    plt.title('DAMP-FREQ')
+    plt.xlabel('DAMPING')
+    plt.ylabel('FREQUENCY')
+    plt.grid()
+    plt.show()
+
+    fig = plt.figure()
+    if tones == 'all':
+        for i in range(len(points)):
+            plt.plot(points[i]['VELOCITY'], points[i]['DAMPING'])
+    else:
+        for i in range(len(tones)):
+            tones[i] -= 1
+        for i in tones:
+            plt.plot(points[i]['VELOCITY'], points[i]['DAMPING'])
+    plt.title('VEL-DAMP')
+    plt.xlabel('VELOCITY')
+    plt.ylabel('DAMPING')
+    plt.grid()
+    plt.show()
+
+
+def dct_from_files(filenames):
+    dct = get_points(filenames[0])
+    if len(filenames) > 1:
+        for file in filenames:
+            dct = merge_two_dicts([dct, get_points(file)])
+    return dct
+
+
+# def cut_tone_by_upper_freq(dct_tones, freq):
+# dct = {}
+# flag = True
+# for key in dct_tones:
+#    if flag:
+#         for i in dct_tones[key].columns:
+# print (dct_tones[key][i]['f'])
+#              if dct_tones[key][i]['f'] > freq:
+#                   flag = False
+#            dct = dct_tones[key]
+
+# if dct_tones[key] > freq:
+#    break
+# else:
+#    dct[key] = dct_tones[key]
+#    return dct
+
+
+def print_e_f_table(dct_tones, filenames):
+    # Красивый вывод  dct_tones. Это таблица с демпфированием и частотами для всех махов
+    print()
+    print('_________', end='')
+    for files in filenames:
+        print(files, end='_________')
+    print()
+    print()
+    for key in dct_tones:
+        print('_____________________', key + 1, 'Тон____________________')
+        print(dct_tones[key])
+        print()
+
+
+# def dangerous_tones()
+
+
+# _________________________________________________________________________
+# _________________________________________________________________________
+# _______________________________Основная часть____________________________
+# _________________________________________________________________________
+
+# Ввод входных файлов
+filenames = ['rv_30_surf_all_fl_m085_089.f06', 'rv_30_surf_all_fl_m09_new.f06']
+dct = dct_from_files(filenames)
 
 print(dct.keys())
-points = dct[0.89]
-# print(points[0].columns)
-# print(points[0])
 
-# print(dct[0.85][0]); print()
-# print(dct[0.85][0].iloc[2]['DAMPING'])
-# print(len(dct[0.85][0]))
+dct_tones = get_dct_tones(dct)
+# dct_tones = cut_tone_by_upper_freq(dct_tones, 600)
 
-# my_series2 = pd.Series([5, 6, 7, 8, 9, 10], index=['a', 'b', 'c', 'd', 'e', 'f'])
-# print(my_series2)
+# Красивый вывод  dct_tones. Это таблица с демпфированием и частотами для всех махов
+print_e_f_table(dct_tones, filenames)
 
-flag_t = True
-dct_tones = {'test': pd.DataFrame({
-    'test_mach': [1.1, 2.2]
-    }, index=['e', 'f'])}
-for key in dct:
-    counter = 0
-    for pnts in dct[key]:
-        if not flag_t:
-            break
-        dct_tones[counter] = pd.DataFrame({key: [1.1, 2.2]}, index=['e', 'f'])
-        counter += 1
-    counter = 0
-    flag_t = False
+graphics(dct, 0.89, [1, 2, 5, 6])
 
-for key in dct:
-    counter = 0
-    print(len(dct[key]))
-    for i in range(len(dct[key])):
-        e = dct[key][i].iloc[len(dct[key][i])//2]['DAMPING']
-        f = dct[key][i].iloc[len(dct[key][i])//2]['FREQUENCY']
-        dct_tones[counter][key] = [e, f]
-        counter += 1
-    counter = 0
 
-dct_tones.pop('test')
-for key in dct_tones:
-    print(key+1, ' Тон')
-    # print(dct_tones[key])
-
-fig = plt.figure()
-for i in range(len(points)):
-    plt.plot(points[i]['DAMPING'], points[i]['FREQUENCY'])
-plt.grid()
-plt.show()
-
-fig = plt.figure()
-for i in range(len(points)):
-    plt.plot(points[i]['VELOCITY'], points[i]['DAMPING'])
-plt.grid()
-plt.show()
