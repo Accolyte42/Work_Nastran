@@ -125,7 +125,7 @@ def get_dct_tones(dct):
     return dct_tones
 
 
-def graphics(dct, mach, tones='all'):
+def graphics_mach(dct, mach, tones='all'):
     # построение нужных графиков
     # Перенос индексов для красоты
     if tones != 'all':
@@ -134,27 +134,57 @@ def graphics(dct, mach, tones='all'):
 
     points = dct[mach]
 
-    plt.figure()
+    # plt.figure()
+    plt.subplot(1, 2, 1)
     if tones == 'all':
         for i in range(len(points)):
-            plt.plot(points[i]['DAMPING'], points[i]['FREQUENCY'], label=i+1)
+            plt.plot(points[i]['DAMPING'], points[i]['FREQUENCY'], label=str(i+1) + 'тон')
     else:
         for i in tones:
-            plt.plot(points[i]['DAMPING'], points[i]['FREQUENCY'], label=i+1)
+            plt.plot(points[i]['DAMPING'], points[i]['FREQUENCY'], label=str(i+1) + 'тон')
     plt.title('DAMP-FREQ')
     plt.xlabel('DAMPING')
     plt.ylabel('FREQUENCY')
     plt.legend()
     plt.grid(True)
-    plt.show()
 
-    plt.figure()
+    plt.subplot(1, 2, 2)
     if tones == 'all':
         for i in range(len(points)):
-            plt.plot(points[i]['VELOCITY'], points[i]['DAMPING'], label=i+1)
+            plt.plot(points[i]['VELOCITY'], points[i]['DAMPING'], label=str(i+1) + 'тон')
     else:
         for i in tones:
-            plt.plot(points[i]['VELOCITY'], points[i]['DAMPING'], label=i+1)
+            plt.plot(points[i]['VELOCITY'], points[i]['DAMPING'], label=str(i+1) + 'тон')
+    plt.title('VEL-DAMP')
+    plt.xlabel('VELOCITY')
+    plt.ylabel('DAMPING')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+
+def graphics_dct(dcttt, ton_dct):
+
+    plt.subplot(1, 2, 1)
+    for mach in dcttt:
+        counter = 0
+        for n_tone in dcttt[mach]:
+            plt.plot(n_tone['DAMPING'], n_tone['FREQUENCY'],
+                     label=str(ton_dct[mach][counter]) + 'тон ' + str(mach) + 'МАХ')
+            counter += 1
+    plt.title('DAMP-FREQ')
+    plt.xlabel('DAMPING')
+    plt.ylabel('FREQUENCY')
+    plt.legend()
+    plt.grid(True)
+
+    plt.subplot(1, 2, 2)
+    for mach in dcttt:
+        counter = 0
+        for n_tone in dcttt[mach]:
+            plt.plot(n_tone['VELOCITY'], n_tone['DAMPING'],
+                     label=str(ton_dct[mach][counter]) + 'тон ' + str(mach) + 'МАХ')
+            counter += 1
     plt.title('VEL-DAMP')
     plt.xlabel('VELOCITY')
     plt.ylabel('DAMPING')
@@ -171,7 +201,7 @@ def dct_from_files(filenames):
     return dct
 
 
-def cut_tones_by_upper_freq_dct(dct, freq=1000):
+def cut_tones_by_upper_freq_dct(dct, freq=800):
     dctt = {}
     for mach in dct:
         flag = True
@@ -190,7 +220,7 @@ def cut_tones_by_upper_freq_dct(dct, freq=1000):
     return dctt
 
 
-def cut_tones_by_upper_freq_dct_tones(dct_tones, freq=1000):
+def cut_tones_by_upper_freq_dct_tones(dct_tones, freq=800):
     dctt = {}
     flag = True
     for key in dct_tones:
@@ -201,7 +231,6 @@ def cut_tones_by_upper_freq_dct_tones(dct_tones, freq=1000):
                 else:
                     dctt[key] = dct_tones[key]
         else:
-            print(dctt)
             break
 
     return dctt
@@ -209,10 +238,14 @@ def cut_tones_by_upper_freq_dct_tones(dct_tones, freq=1000):
 
 def cut_dangerous_tones_d(dct, dang_demp=-0.01):
     dctt = {}
+    tones_dict = {}
     for mach in dct:
+        tones = 0  # номер тона, нужен для того, чтобы при можно было понять, где какой тон
+        tones_list = []
         dctt[mach] = []
         for n_tone in dct[mach]:
             # print(n_tone)
+            tones += 1
             flag = True
             if flag:
                 for dmp in n_tone['DAMPING']:
@@ -221,10 +254,12 @@ def cut_dangerous_tones_d(dct, dang_demp=-0.01):
                         break
                 if flag:
                     dctt[mach].append(n_tone)
+                    tones_list.append(tones)
             else:
                 break
+        tones_dict[mach] = tones_list
 
-    return dctt
+    return dctt, tones_dict
 
 
 def print_e_f_table(dct_tones, filenames):
