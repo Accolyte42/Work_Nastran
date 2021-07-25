@@ -171,7 +171,23 @@ def dct_from_files(filenames):
     return dct
 
 
+def cut_tones_by_upper_freq_dct(dct, freq):
+    dctt = {}
+    for mach in dct:
+        flag = True
+        dctt[mach] = []
+        for n_tone in dct[mach]:
+            if flag:
+                for fr in n_tone['FREQUENCY']:
+                    if fr > freq:
+                        flag = False
+                        break
+                if flag:
+                    dctt[mach].append(n_tone)
+            else:
+                break
 
+    return dctt
 
 
 def cut_tones_by_upper_freq_dct_tones(dct_tones, freq):
