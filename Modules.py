@@ -134,7 +134,7 @@ def graphics(dct, mach, tones='all'):
 
     points = dct[mach]
 
-    fig = plt.figure()
+    plt.figure()
     if tones == 'all':
         for i in range(len(points)):
             plt.plot(points[i]['DAMPING'], points[i]['FREQUENCY'], label=i+1)
@@ -148,7 +148,7 @@ def graphics(dct, mach, tones='all'):
     plt.grid(True)
     plt.show()
 
-    fig = plt.figure()
+    plt.figure()
     if tones == 'all':
         for i in range(len(points)):
             plt.plot(points[i]['VELOCITY'], points[i]['DAMPING'], label=i+1)
@@ -171,7 +171,7 @@ def dct_from_files(filenames):
     return dct
 
 
-def cut_tones_by_upper_freq_dct(dct, freq):
+def cut_tones_by_upper_freq_dct(dct, freq=1000):
     dctt = {}
     for mach in dct:
         flag = True
@@ -190,7 +190,7 @@ def cut_tones_by_upper_freq_dct(dct, freq):
     return dctt
 
 
-def cut_tones_by_upper_freq_dct_tones(dct_tones, freq):
+def cut_tones_by_upper_freq_dct_tones(dct_tones, freq=1000):
     dctt = {}
     flag = True
     for key in dct_tones:
@@ -203,6 +203,26 @@ def cut_tones_by_upper_freq_dct_tones(dct_tones, freq):
         else:
             print(dctt)
             break
+
+    return dctt
+
+
+def cut_dangerous_tones_d(dct, dang_demp=-0.01):
+    dctt = {}
+    for mach in dct:
+        dctt[mach] = []
+        for n_tone in dct[mach]:
+            # print(n_tone)
+            flag = True
+            if flag:
+                for dmp in n_tone['DAMPING']:
+                    if dmp < dang_demp:
+                        flag = False
+                        break
+                if flag:
+                    dctt[mach].append(n_tone)
+            else:
+                break
 
     return dctt
 

@@ -11,9 +11,6 @@ import matplotlib.pyplot as plt
 import Modules as m
 
 
-# def dangerous_tones()
-
-
 # _________________________________________________________________________
 # _________________________________________________________________________
 # _______________________________Основная часть____________________________
@@ -25,14 +22,18 @@ dct = m.dct_from_files(filenames)
 
 print(dct.keys())
 
-dct = m.cut_tones_by_upper_freq_dct(dct, 600)
+dct = m.cut_tones_by_upper_freq_dct(dct, 800)
+dct = m.cut_dangerous_tones_d(dct)
+print(dct)
 
-dct_tones = m.get_dct_tones(dct)
+
+# dct_tones = m.get_dct_tones(dct)
 # dct_tones = m.cut_tones_by_upper_freq_dct_tones(dct_tones, 600)
 
-# Красивый вывод  dct_tones. Это таблица с демпфированием и частотами для всех махов
-m.print_e_f_table(dct_tones, filenames)
 
-# m.graphics(dct, 0.89, [1,2,4])
+# Красивый вывод  dct_tones. Это таблица с демпфированием и частотами для всех махов
+# m.print_e_f_table(dct_tones, filenames)
+
+m.graphics(dct, 0.89, [1, 2])
 
 
