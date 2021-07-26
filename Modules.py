@@ -102,13 +102,13 @@ def get_points(filename, clear_columns=True):
 
 def get_dct_tones(dct):
     flag_t = True
-    dct_tones = {'test': pd.DataFrame({'test_mach': [1.1, 2.2]}, index=['e', 'f'])}
+    dct_tones = {'test': pd.DataFrame({'test_mach': [.2, 1.1, 2.2]}, index=['e/2', 'e', 'f'])}
     for key in dct:
         counter = 0
         for pnts in dct[key]:
             if not flag_t:
                 break
-            dct_tones[counter] = pd.DataFrame({key: [1.1, 2.2]}, index=['e', 'f'])
+            dct_tones[counter] = pd.DataFrame({key: [.2, 1.1, 2.2]}, index=['e/2', 'e', 'f'])
             counter += 1
         counter = 0
         flag_t = False
@@ -117,7 +117,7 @@ def get_dct_tones(dct):
         for i in range(len(dct[key])):
             e = dct[key][i].iloc[len(dct[key][i]) // 2]['DAMPING']
             f = dct[key][i].iloc[len(dct[key][i]) // 2]['FREQUENCY']
-            dct_tones[counter][key] = [e, f]
+            dct_tones[counter][key] = [e/2, e , f]
             counter += 1
         counter = 0
     dct_tones.pop('test')
@@ -265,12 +265,12 @@ def cut_dangerous_tones_d(dct, dang_demp=-0.01):
 def print_e_f_table(dct_tones, filenames):
     # Красивый вывод  dct_tones. Это таблица с демпфированием и частотами для всех махов
     print()
-    print('_________', end='')
+    print('', end='')
     for files in filenames:
-        print(files, end='_________')
+        print(files, end='')
     print()
     print()
     for key in dct_tones:
-        print('_____________________', key + 1, 'Тон____________________')
+        print(str(key + 1) + 'Тон')
         print(dct_tones[key])
         print()
